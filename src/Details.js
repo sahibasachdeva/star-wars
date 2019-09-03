@@ -9,9 +9,8 @@ class Details extends React.Component
         super(props);
         this.state = {
             deets : []
-        }
-
-    }
+        }}
+        
     render()
     {
         var deets = this.props.location.state.planetDetails1;

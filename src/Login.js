@@ -19,6 +19,7 @@ submit(){
  if (result.length > 0)
  {
   localStorage.setItem('signed', true);
+  localStorage.setItem('userName', this.state.userName);
   this.props.history.push("Search");
  }
  else{
