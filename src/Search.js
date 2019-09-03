@@ -29,67 +29,66 @@ constructor(props){
     this.handleSearchInput =  this.handleSearchInput.bind(this);
 
     this.updateSearchResult = this.updateSearchResult.bind(this);
-    this.updateSearchResult = debounce(this.updateSearchResult, 500);
 }
 
 handleSignout(){
-    localStorage.removeItem('signed');
+window.localStorage.clear();
+    
     this.props.history.push("/");
-  }
-
-  updateSearchResult() {
-    this.setState({
-      planetName: this.state.planetName
-    });
-    let searchCount = localStorage.getItem('SearchCount');
-    let userName = localStorage.getItem('userName');
-    if(!userName){
-       return this.props.history.push('/')
-    }
-    if (!searchCount) {
-        searchCount = {
-            searchCount: 1,
-            time: new Date().getTime()
-        }
-        this.state.searchAllowed = true;
-        localStorage.setItem("SearchCount", JSON.stringify(searchCount));
-    } else {
-        searchCount = JSON.parse(searchCount);
-        let isStillOneMinute = (new Date() < new Date(searchCount.time).setMinutes(new Date(searchCount.time).getMinutes() + 3));
-        if (isStillOneMinute && searchCount.searchCount >= 5 && userName !== "luke skywalker") {
-            this.state.searchAllowed = false;
-            window.alert("You are not so privileged");
-        } else {
-            this.state.searchAllowed = true;
-            if (!isStillOneMinute) {
-                searchCount.time = new Date().getTime();
-                searchCount.searchCount = 1;
-            } else {
-                searchCount.searchCount++;
-            }
-            localStorage.setItem("SearchCount", JSON.stringify(searchCount));
-        }
-    }
-
 
   }
-
 handleSearchInput(event){
     event.preventDefault();
     this.setState({ planetName: event.target.value });
-    fetch('https://swapi.co/api/planets/?search='+this.state.planetName)
-    .then(responseJson => responseJson.json())
-    .then(result => {      
-        result.results.map((item, index) =>{
-            if(item.population==="unknown"){
-                item.population=1000;
-            }
-        })
-        this.setState({'planetResult':result.results});
-    })
-
-    this.updateSearchResult();
+    return this.updateSearchResult(event.target.value)
 }
+
+updateSearchResult = debounce(async (value) =>
+   {
+       let searchCount = localStorage.getItem('SearchCount');
+       let userName = localStorage.getItem('userName');
+       if(!userName){
+          return this.props.history.push('/')
+       }
+       if (!searchCount) {
+           searchCount = {
+               searchCount: 1,
+               time: new Date().getTime()
+           }
+           this.state.searchAllowed = true;
+           localStorage.setItem("SearchCount", JSON.stringify(searchCount));
+       } else {
+           searchCount = JSON.parse(searchCount);
+        //   userData = JSON.parse(userData);
+           let timeCheck = (new Date() < new Date(searchCount.time).setMinutes(new Date(searchCount.time).getMinutes() + 1));
+           if (timeCheck && searchCount.searchCount >= 5 && userName.name.toString().toLowerCase() !== "luke skywalker") {
+               this.state.searchAllowed = false;
+               window.alert("you ain't so privileged");
+           } else {
+               this.state.searchAllowed = true;
+               if (!timeCheck) {
+                   searchCount.time = new Date().getTime();
+                   searchCount.searchCount = 1;
+               } else {
+                   searchCount.searchCount++;
+               }
+               localStorage.setItem("SearchCount", JSON.stringify(searchCount));
+           }
+       }
+       if (this.state.searchAllowed) {
+           this.state.searchAllowed = true;
+           fetch('https://swapi.co/api/planets/?search='+this.state.planetName)
+           .then(responseJson => responseJson.json())
+           .then(result => {      
+               result.results.map((item, index) =>{
+                   if(item.population==="unknown"){
+                       item.population=1000;
+                   }
+               })
+               this.setState({'planetResult':result.results});
+           })
+   }
+   },750)
 
 
 details(e, itemName)
